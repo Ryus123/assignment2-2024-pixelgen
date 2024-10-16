@@ -25,7 +25,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 
-    os.makedirs('chekpoints', exist_ok=True)
+    os.makedirs('checkpoints', exist_ok=True)
     os.makedirs('data', exist_ok=True)
 
     # Data Pipeline
