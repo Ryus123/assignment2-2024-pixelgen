@@ -42,14 +42,17 @@ def G_train(x, G, D, G_optimizer, criterion, threshold):
     D_output = D(G_output)  # Discriminator's evaluation of fake samples
     G_loss = criterion(D_output, y_real_labels)  # Generator's loss
 
+    quotient = D_output/(1-D_output)
+
     # Sample rejection process based on threshold
     # Re-generate samples until the discriminator's output is above a certain threshold
     with torch.no_grad():  # No need to track gradients during sample rejection
-        while torch.mean(D_output) < threshold:  # Adjust condition for rejection
+        while torch.mean(quotient) < threshold:
             z = torch.randn(x.shape[0], 100)  # Re-sample latent space
             G_output = G(z)  # Re-generate fake samples
             D_output = D(G_output)  # Get new discriminator output
             G_loss = criterion(D_output, y_real_labels)  # Re-calculate generator's loss
+            quotient = D_output/(1-D_output)
     
     # Once acceptable samples are generated, optimize G's parameters
     G_loss.backward()
