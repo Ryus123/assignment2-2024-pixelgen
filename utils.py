@@ -2,21 +2,21 @@ import torch
 import os
 
 
-def D_train(x, G, D, D_optimizer, criterion, threshold):
+def D_train(x, G, D, D_optimizer, criterion):
     #=======================Train the discriminator=======================#
     D.zero_grad()
 
     # train discriminator on real
     x_real, y_real = x, torch.ones(x.shape[0], 1)
-    x_real, y_real = x_real.cuda(), y_real.cuda()
+    x_real, y_real = x_real, y_real
 
     D_output = D(x_real)
     D_real_loss = criterion(D_output, y_real)
     D_real_score = D_output
 
     # train discriminator on facke
-    z = torch.randn(x.shape[0], 100).cuda()
-    x_fake, y_fake = G(z), torch.zeros(x.shape[0], 1).cuda()
+    z = torch.randn(x.shape[0], 100)
+    x_fake, y_fake = G(z), torch.zeros(x.shape[0], 1)
 
     D_output =  D(x_fake)
     
@@ -35,26 +35,28 @@ def G_train(x, G, D, G_optimizer, criterion, threshold):
     #=======================Train the generator=======================#
     G.zero_grad()
 
-    z = torch.randn(x.shape[0], 100).cuda()
-    y = torch.ones(x.shape[0], 1).cuda()
-                 
-    G_output = G(z)
-    D_output = D(G_output)
-    G_loss = criterion(D_output, y)
+    z = torch.randn(x.shape[0], 100)  # Latent space sample (input for G)
+    y_real_labels = torch.ones(x.shape[0], 1)  # Real labels
 
-    quotient = D_output/(1-D_output)
+    G_output = G(z)  # Generate fake samples
+    D_output = D(G_output)  # Discriminator's evaluation of fake samples
+    G_loss = criterion(D_output, y_real_labels)  # Generator's loss
 
-    while threshold>quotient:
-        G_output = G(z)
-        D_output = D(G_output)
-        G_loss = criterion(D_output, y)
-        quotient = D_output/(1-D_output)
-
-    # gradient backprop & optimize ONLY G's parameters
+    # Sample rejection process based on threshold
+    # Re-generate samples until the discriminator's output is above a certain threshold
+    with torch.no_grad():  # No need to track gradients during sample rejection
+        while torch.mean(D_output) < threshold:  # Adjust condition for rejection
+            z = torch.randn(x.shape[0], 100)  # Re-sample latent space
+            G_output = G(z)  # Re-generate fake samples
+            D_output = D(G_output)  # Get new discriminator output
+            G_loss = criterion(D_output, y_real_labels)  # Re-calculate generator's loss
+    
+    # Once acceptable samples are generated, optimize G's parameters
     G_loss.backward()
     G_optimizer.step()
-        
-    return G_loss.data.item()
+
+    return G_loss.item()
+
 
 
 

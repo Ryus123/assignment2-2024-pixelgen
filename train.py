@@ -48,8 +48,8 @@ if __name__ == '__main__':
 
     print('Model Loading...')
     mnist_dim = 784
-    G = torch.nn.DataParallel(Generator(g_output_dim = mnist_dim)).cuda()
-    D = torch.nn.DataParallel(Discriminator(mnist_dim)).cuda()
+    G = torch.nn.DataParallel(Generator(g_output_dim = mnist_dim))
+    D = torch.nn.DataParallel(Discriminator(mnist_dim))
 
 
     # model = DataParallel(model).cuda()
