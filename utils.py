@@ -2,8 +2,7 @@ import torch
 import os
 
 
-
-def D_train(x, G, D, D_optimizer, criterion):
+def D_train(x, G, D, D_optimizer, criterion, threshold):
     #=======================Train the discriminator=======================#
     D.zero_grad()
 
@@ -32,7 +31,7 @@ def D_train(x, G, D, D_optimizer, criterion):
     return  D_loss.data.item()
 
 
-def G_train(x, G, D, G_optimizer, criterion):
+def G_train(x, G, D, G_optimizer, criterion, threshold):
     #=======================Train the generator=======================#
     G.zero_grad()
 
@@ -42,6 +41,11 @@ def G_train(x, G, D, G_optimizer, criterion):
     G_output = G(z)
     D_output = D(G_output)
     G_loss = criterion(D_output, y)
+
+    quotient = D_output/(1-D_output)
+
+    if threshold>quotient:
+        return None
 
     # gradient backprop & optimize ONLY G's parameters
     G_loss.backward()
