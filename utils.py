@@ -44,8 +44,11 @@ def G_train(x, G, D, G_optimizer, criterion, threshold):
 
     quotient = D_output/(1-D_output)
 
-    if threshold>quotient:
-        return None
+    while threshold>quotient:
+        G_output = G(z)
+        D_output = D(G_output)
+        G_loss = criterion(D_output, y)
+        quotient = D_output/(1-D_output)
 
     # gradient backprop & optimize ONLY G's parameters
     G_loss.backward()
