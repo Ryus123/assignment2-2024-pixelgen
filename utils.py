@@ -58,7 +58,7 @@ def G_double_train(x, G, D, G_optimizer, criterion, threshold):
     G_loss = criterion(D_output, y_real_labels)  # Generator's loss
     quotient = D_output/(1-D_output)
     with torch.no_grad():  # No need to track gradients during sample rejection
-        while quotient < threshold:  # Adjust condition for rejection
+        while torch.mean(quotient) < threshold:  # Adjust condition for rejection
             z = torch.randn(x.shape[0], 100)  # Re-sample latent space
             G_output = G(z)  # Re-generate fake samples
             D_output = D(G_output)  # Get new discriminator output
