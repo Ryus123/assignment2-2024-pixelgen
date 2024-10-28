@@ -58,15 +58,25 @@ def G_double_train(x, G, D, G_optimizer, criterion, threshold):
     G_loss = criterion(D_output, y_real_labels)  # Generator's loss
     quotient = D_output/(1-D_output)
     with torch.no_grad():  # No need to track gradients during sample rejection
-        while torch.mean(quotient) < threshold:  # Adjust condition for rejection
-            z = torch.randn(x.shape[0], 100)  # Re-sample latent space
-            G_output = G(z)  # Re-generate fake samples
-            D_output = D(G_output)  # Get new discriminator output
-            G_loss = criterion(D_output, y_real_labels)  # Re-calculate generator's loss
-            quotient = D_output/(1-D_output)
-    # Once acceptable samples are generated, optimize G's parameters
+            while True:
+                z = torch.randn(x.shape[0], 100)  # Re-sample latent space
+                G_output = G(z)  # Generate fake samples
+                D_output = D(G_output)  # Discriminator's evaluation of fake samples
+                quotient = D_output/(1-D_output)
+
+                if torch.mean(quotient) >= threshold:  # Break loop if threshold condition met
+                    break
+                
+    # Recalculate with gradients enabled for backpropagation
+    z = torch.randn(x.shape[0], 100, requires_grad=True)  # Ensure z requires grad
+    G_output = G(z)
+    D_output = D(G_output)
+    G_loss = criterion(D_output, y_real_labels)  # Generator's loss
+
+    # Backpropagation and optimization step
     G_loss.backward()
     G_optimizer.step()
+
     return G_loss.item()
 
 

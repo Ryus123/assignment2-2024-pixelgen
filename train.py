@@ -81,7 +81,7 @@ if __name__ == '__main__':
     for epoch in trange(1, n_epoch+1, leave=True):           
         for batch_idx, (x, _) in enumerate(train_loader):
             x = x.view(-1, mnist_dim)
-            G_double_train(x, G, D, G_optimizer, criterion, threshold=0.5)
+            G_double_train(x, G, D, G_optimizer, criterion, threshold=0.95)
 
         if epoch % 10 == 0:
             save_models(G, D, 'checkpoints')
