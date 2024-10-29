@@ -61,10 +61,8 @@ def G_double_train(x, G, D, G_optimizer, criterion, threshold):
             while True:
                 z = torch.randn(x.shape[0], 100)  # Re-sample latent space
                 G_output = G(z)  # Generate fake samples
-                D_output = D(G_output)  # Discriminator's evaluation of fake samples
-                quotient = D_output/(1-D_output)
 
-                if torch.mean(quotient) >= threshold:  # Break loop if threshold condition met
+                if torch.mean(D_output).item() >= threshold:  # Break loop if threshold condition met
                     break
                 
     # Recalculate with gradients enabled for backpropagation
