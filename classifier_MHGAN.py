@@ -9,7 +9,6 @@ import numpy as np
 
 
 from model import Generator, Discriminator
-from utils_MHGAN import D_train, G_train, G_double_train, save_models
 
 # Classification models:
 from sklearn.linear_model import LogisticRegression
@@ -54,7 +53,7 @@ class Linear(torch.nn.Module):
     """
 
     def __init__(self):
-        super(self).__init__()
+        super(Linear, self).__init__()
         self.linear = torch.nn.Linear(1, 1)
 
     def forward(self, x):

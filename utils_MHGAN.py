@@ -67,8 +67,8 @@ def G_train(x, G, D, D_tilde, G_optimizer, criterion):
     #=======================Train the generator=======================#
     G.zero_grad()
 
-    z = torch.randn(x.shape[0], 100)  # Latent space sample (input for G)
-    y_real_labels = torch.ones(x.shape[0], 1)  # Real labels
+    z = torch.randn(x.shape[0], 100).cuda()  # Latent space sample (input for G)
+    y_real_labels = torch.ones(x.shape[0], 1).cuda()  # Real labels
 
     G_output = G(z)  # Generate fake samples
     D_output = D(D_tilde(G_output))  # Discriminator's evaluation of fake samples
