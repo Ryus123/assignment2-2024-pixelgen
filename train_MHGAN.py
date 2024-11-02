@@ -8,8 +8,8 @@ import torch.optim as optim
 import numpy as np
 
 from model import Generator, Discriminator
-from utils_MHGAN import D_train, G_train, G_double_train, save_models
-
+from utils_MHGAN import D_train, G_train, Calibrator_train, save_models
+from classifier_MHGAN import Linear, Identity
 
 
 if __name__ == '__main__':
@@ -54,20 +54,18 @@ if __name__ == '__main__':
     print('Model Loading...')
     mnist_dim = 784
     G = torch.nn.DataParallel(Generator(g_output_dim = mnist_dim))
-    D = torch.nn.DataParallel(Discriminator(mnist_dim))
-
+    D_tilde = torch.nn.DataParallel(Discriminator(mnist_dim))
+    D = Linear()
 
     # model = DataParallel(model).cuda()
     print('Model loaded.')
+
     # Optimizer 
-
-
-
     # define loss
     criterion = nn.BCELoss() 
-
     # define optimizers
     G_optimizer = optim.Adam(G.parameters(), lr = args.lr)
+    D_tilde_optimizer = optim.Adam(D_tilde.parameters(), lr = args.lr)
     D_optimizer = optim.Adam(D.parameters(), lr = args.lr)
 
     print('Start Training :')
@@ -76,20 +74,18 @@ if __name__ == '__main__':
     for epoch in trange(1, n_epoch+1, leave=True):           
         for batch_idx, (x, _) in enumerate(train_loader):
             x = x.view(-1, mnist_dim)
-            D_train(x, G, D, D_optimizer, criterion)
-            G_train(x, G, D, G_optimizer, criterion)
+            D_train(x, G, D_tilde, D_tilde_optimizer, criterion)
+            G_train(x, G, D, D_tilde, G_optimizer, criterion)
 
-        if epoch % 10 == 0:
-            save_models(G, D, 'checkpoints')
-    
-    #Double-training the generator
-    for epoch in trange(1, n_epoch+1, leave=True):           
-        for batch_idx, (x, _) in enumerate(train_loader):
+        for batch_idx, (x,_) in enumerate(calibration_loader):
             x = x.view(-1, mnist_dim)
-            G_double_train(x, G, D, G_optimizer, criterion, threshold=0.95)
+            Calibrator_train(x, D, G, D_tilde, D_optimizer, criterion)
 
         if epoch % 10 == 0:
-            save_models(G, D, 'checkpoints')
+            # !!! We should save both D_tilde and the calibrator: D(x) = C( D(x) )
+            # Since we only need the generator, we can just save D_tilde
+            save_models(G, D_tilde, 'checkpoints')
+
                 
     print('Training done')
 

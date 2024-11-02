@@ -47,19 +47,29 @@ class Identity(Calibrator):
         return y_pred
 
 
-class Linear(Calibrator):
+class Linear(torch.nn.Module):
+    """
+    This classifier uses Logistic Regression to predict
+    if an image is fake or real
+    """
+
     def __init__(self):
-        self.clf = LogisticRegression()
+        super(self).__init__()
+        self.linear = torch.nn.Linear(1, 1)
 
-    def fit(self, y_pred, y_true):
-        # assert y_true is not None
-        y_pred, y_true = Calibrator.validate(y_pred, y_true)
-        self.clf.fit(y_pred[:, None], y_true)
+    def forward(self, x):
+        y_pred = torch.sigmoid(self.linear(x))
+        return y_pred
 
-    def predict(self, y_pred):
-        y_pred, _ = Calibrator.validate(y_pred)
-        y_calib = self.clf.predict_proba(y_pred[:, None])[:, 1]
-        return y_calib
+    # def fit(self, y_pred, y_true):
+    #     # assert y_true is not None
+    #     y_pred, y_true = Calibrator.validate(y_pred, y_true)
+    #     self.clf.fit(y_pred[:, None], y_true)
+
+    # def predict(self, y_pred):
+    #     y_pred, _ = Calibrator.validate(y_pred)
+    #     y_calib = self.clf.predict_proba(y_pred[:, None])[:, 1]
+    #     return y_calib
     
 
 

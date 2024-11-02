@@ -8,17 +8,17 @@ def D_train(x, G, D, D_optimizer, criterion):
 
     # train discriminator on real
     x_real, y_real = x, torch.ones(x.shape[0], 1)
-    x_real, y_real = x_real, y_real
+    x_real, y_real = x_real.cuda(), y_real.cuda()
 
     D_output = D(x_real)
     D_real_loss = criterion(D_output, y_real)
     D_real_score = D_output
 
-    # train discriminator on facke
-    z = torch.randn(x.shape[0], 100)
-    x_fake, y_fake = G(z), torch.zeros(x.shape[0], 1)
+    # train discriminator on fake
+    z = torch.randn(x.shape[0], 100).cuda()
+    x_fake, y_fake = G(z), torch.zeros(x.shape[0], 1).cuda()
 
-    D_output =  D(x_fake)
+    D_output = D(x_fake)
     
     D_fake_loss = criterion(D_output, y_fake)
     D_fake_score = D_output
@@ -28,7 +28,7 @@ def D_train(x, G, D, D_optimizer, criterion):
     D_loss.backward()
     D_optimizer.step()
         
-    return  D_loss.data.item()
+    return D_loss.data.item()
 
 
 def G_train(x, G, D, G_optimizer, criterion):
