@@ -17,14 +17,13 @@ def D_train(x, G, D, D_optimizer, criterion, K=640):
 
     # train discriminator on fake
     x_fake = torch.zeros(x.shape)
-
+    K_samples = torch.randn(x.shape[0], K, 100).cuda()
     # Sampling fake data with MH method
     for sample in range(x.shape[0]):
-        K_samples = torch.randn(K, 100).cuda()
-        K_samples = G(K_samples)
-        D_output = D(K_samples)
+        K_samples_generator = G(K_samples[sample])
+        D_output = D(K_samples_generator)
         x_k = sampling.mh_sample(D_output)
-        x_fake[sample] = x_k
+        x_fake[sample] = K_samples_generator[x_k]
     
     y_fake = torch.zeros(x.shape[0], 1).cuda()
     D_output = D(x_fake)
