@@ -24,6 +24,19 @@ def mh_sample(d_score, init_picked=0, start=1, random=np.random):
     return picked_round
 
 
+def mh_sample2(d_score, random=np.random):
+
+    OR = disc_2_odds_ratio(d_score)
+    OR_U = OR / random.rand(len(d_score))
+
+    picked_round = 0
+    alpha = 1.0
+    for ii in range(1, len(d_score)):
+        if OR[picked_round] <= OR_U[ii]:
+            alpha = accept_prob_MH_disc(d_score[picked_round], d_score[ii])
+            picked_round = ii
+    return picked_round, alpha
+
 
 def binary_posterior(P0, P1):
     '''Get posterior on P(case 1|x) given likelihoods for case 0 and case 1, P0
