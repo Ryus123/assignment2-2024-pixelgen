@@ -2,7 +2,6 @@ import torch
 import os
 
 
-
 def D_train(x, G, D, D_optimizer, criterion):
     #=======================Train the discriminator=======================#
     D.zero_grad()
@@ -15,11 +14,11 @@ def D_train(x, G, D, D_optimizer, criterion):
     D_real_loss = criterion(D_output, y_real)
     D_real_score = D_output
 
-    # train discriminator on facke
+    # train discriminator on fake
     z = torch.randn(x.shape[0], 100).cuda()
     x_fake, y_fake = G(z), torch.zeros(x.shape[0], 1).cuda()
 
-    D_output =  D(x_fake)
+    D_output = D(x_fake)
     
     D_fake_loss = criterion(D_output, y_fake)
     D_fake_score = D_output
@@ -29,25 +28,55 @@ def D_train(x, G, D, D_optimizer, criterion):
     D_loss.backward()
     D_optimizer.step()
         
-    return  D_loss.data.item()
+    return D_loss.data.item()
 
 
 def G_train(x, G, D, G_optimizer, criterion):
     #=======================Train the generator=======================#
     G.zero_grad()
 
-    z = torch.randn(x.shape[0], 100).cuda()
-    y = torch.ones(x.shape[0], 1).cuda()
-                 
-    G_output = G(z)
-    D_output = D(G_output)
-    G_loss = criterion(D_output, y)
+    z = torch.randn(x.shape[0], 100)  # Latent space sample (input for G)
+    y_real_labels = torch.ones(x.shape[0], 1)  # Real labels
 
-    # gradient backprop & optimize ONLY G's parameters
+    G_output = G(z)  # Generate fake samples
+    D_output = D(G_output)  # Discriminator's evaluation of fake samples
+    G_loss = criterion(D_output, y_real_labels)  # Generator's loss
+
     G_loss.backward()
     G_optimizer.step()
-        
-    return G_loss.data.item()
+
+    return G_loss.item()
+
+def G_double_train(x, G, D, G_optimizer, criterion, threshold, max_attempts=10):
+    G.zero_grad()
+    
+    best_G_output, best_D_output = None, None
+    attempts = 0
+
+    while attempts < max_attempts:
+        z = torch.randn(x.shape[0], 100)  # Latent space sample
+        G_output = G(z)  # Generate fake samples
+        D_output = D(G_output)  # Discriminator's evaluation
+
+        # Check if the generated samples meet the threshold
+        if torch.mean(D_output).item() >= threshold:
+            best_G_output, best_D_output = G_output, D_output
+            break
+        elif best_D_output is None or torch.mean(D_output).item() > torch.mean(best_D_output).item():
+            # Keep track of the best attempt
+            best_G_output, best_D_output = G_output, D_output
+
+        attempts += 1
+
+    # Calculate generator loss on the best samples found
+    y_real_labels = torch.ones(x.shape[0], 1)  # Real labels for generator loss
+    G_loss = criterion(best_D_output, y_real_labels)  # Generator's loss
+
+    # Backpropagation and optimization
+    G_loss.backward()
+    G_optimizer.step()
+
+    return G_loss.item()
 
 
 
