@@ -8,7 +8,7 @@ import torch.optim as optim
 
 
 from model import Generator, Discriminator
-from utils import D_train, G_train, save_models
+from utils import D_train, G_train, save_models, G_double_train
 
 
 
@@ -64,6 +64,7 @@ if __name__ == '__main__':
     # define optimizers
     G_optimizer = optim.Adam(G.parameters(), lr = args.lr)
     D_optimizer = optim.Adam(D.parameters(), lr = args.lr)
+    Double_optimizer = optim.Adam(D.parameters(), lr = args.lr)
 
     print('Start Training :')
     
@@ -74,9 +75,17 @@ if __name__ == '__main__':
             D_train(x, G, D, D_optimizer, criterion)
             G_train(x, G, D, G_optimizer, criterion)
 
+        # if epoch % 10 == 0:
+        #     save_models(G, D, 'checkpoints')
+                
+    #Double-training the generator
+    for epoch in trange(1, n_epoch+1, leave=True):           
+        for batch_idx, (x, _) in enumerate(train_loader):
+            x = x.view(-1, mnist_dim)
+            G_double_train(x, G, D, Double_optimizer, criterion, threshold=0.95)
+
         if epoch % 10 == 0:
-            save_models(G, D, 'checkpoints')
+            save_models(G, D, 'checkpoints_DRS')
                 
     print('Training done')
-
         

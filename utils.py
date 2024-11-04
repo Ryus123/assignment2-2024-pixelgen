@@ -51,6 +51,39 @@ def G_train(x, G, D, G_optimizer, criterion):
 
 
 
+def G_double_train(x, G, D, G_optimizer, criterion, threshold, max_attempts=10):
+    G.zero_grad()
+    
+    best_G_output, best_D_output = None, None
+    attempts = 0
+
+    while attempts < max_attempts:
+        z = torch.randn(x.shape[0], 100).cuda()  # Latent space sample
+        G_output = G(z)  # Generate fake samples
+        D_output = D(G_output)  # Discriminator's evaluation
+
+        # Check if the generated samples meet the threshold
+        if torch.mean(D_output).item() >= threshold:
+            best_G_output, best_D_output = G_output, D_output
+            break
+        elif best_D_output is None or torch.mean(D_output).item() > torch.mean(best_D_output).item():
+            # Keep track of the best attempt
+            best_G_output, best_D_output = G_output, D_output
+
+        attempts += 1
+
+    # Calculate generator loss on the best samples found
+    y_real_labels = torch.ones(x.shape[0], 1).cuda()  # Real labels for generator loss
+    G_loss = criterion(best_D_output, y_real_labels)  # Generator's loss
+
+    # Backpropagation and optimization
+    G_loss.backward()
+    G_optimizer.step()
+
+    return G_loss.item()
+
+
+
 def save_models(G, D, folder):
     torch.save(G.state_dict(), os.path.join(folder,'G.pth'))
     torch.save(D.state_dict(), os.path.join(folder,'D.pth'))
