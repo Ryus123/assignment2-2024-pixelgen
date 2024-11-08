@@ -57,12 +57,13 @@ def G_double_train(x, G, D, G_optimizer, criterion, threshold, max_attempts=10):
         z = torch.randn(x.shape[0], 100)  # Latent space sample
         G_output = G(z)  # Generate fake samples
         D_output = D(G_output)  # Discriminator's evaluation
+        a_output = D_output/(1-D_output)
 
         # Check if the generated samples meet the threshold
-        if torch.mean(D_output).item() >= threshold:
+        if torch.mean(a_output).item() >= threshold:
             best_G_output, best_D_output = G_output, D_output
             break
-        elif best_D_output is None or torch.mean(D_output).item() > torch.mean(best_D_output).item():
+        elif best_D_output is None or torch.mean(a_output).item() > torch.mean(best_D_output).item():
             # Keep track of the best attempt
             best_G_output, best_D_output = G_output, D_output
 
