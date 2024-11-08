@@ -101,7 +101,7 @@ def pick_up_real_samples(batch_size, mnist_dim = 784):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=(0.5), std=(0.5))])
 
-    test_dataset = datasets.MNIST(root='data/MNIST/', train=False, transform=transform, download=False)
+    test_dataset = datasets.MNIST(root='data/MNIST/', train=False, transform=transform, download=True)
 
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset, 
                                               batch_size=batch_size, shuffle=True)
