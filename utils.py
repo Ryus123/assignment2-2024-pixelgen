@@ -81,8 +81,6 @@ def G_double_train(x, G, D, G_optimizer, criterion, threshold, max_attempts=10):
     G_optimizer.step()
 
     return G_loss.item()
-        
-    return G_loss.data.item()
 
 
 
