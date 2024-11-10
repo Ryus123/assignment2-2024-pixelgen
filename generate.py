@@ -61,7 +61,7 @@ if __name__ == '__main__':
             x0 = x0.view(-1, mnist_dim)
             change = False # True when x0 actualized
             
-            for _ in range(100):                
+            for _ in range(10):                
                 z = torch.randn(1, 100).cuda()
                 x_pot = model(z)
                 U = torch.rand(1).cuda() # draw a uniform variable between [0;1]
