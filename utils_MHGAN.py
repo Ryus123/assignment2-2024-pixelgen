@@ -81,7 +81,7 @@ def pick_up_real_samples(data_loader):
     return real_data[:,0,:,:]
 
 
-def mh_samples(x0, G, Discr, Calib, K=100, mnist_dim=784):
+def mh_samples(x0, G, Discr, Calib, K, mnist_dim=784):
     """
     Return a new sample to save with the MH process.
     The output is of the shape (1, 28, 28)
