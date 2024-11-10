@@ -32,3 +32,17 @@ class Discriminator(nn.Module):
         x = F.leaky_relu(self.fc2(x), 0.2)
         x = F.leaky_relu(self.fc3(x), 0.2)
         return torch.sigmoid(self.fc4(x))
+    
+class Calibrator_linear(torch.nn.Module):
+    """
+    This classifier uses Logistic Regression to predict
+    if an image is fake or real for MHGAN.
+    """
+
+    def __init__(self):
+        super(Calibrator_linear, self).__init__()
+        self.linear = torch.nn.Linear(1, 1)
+
+    def forward(self, x):
+        y_pred = torch.sigmoid(self.linear(x))
+        return y_pred
