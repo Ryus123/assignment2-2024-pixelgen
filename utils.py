@@ -46,8 +46,8 @@ def G_train(x, G, D, G_optimizer, criterion):
     # gradient backprop & optimize ONLY G's parameters
     G_loss.backward()
     G_optimizer.step()
-
-    return G_loss.item()
+        
+    return G_loss.data.item()
 
 def G_double_train(x, G, D, G_optimizer, criterion, threshold, max_attempts=10):
     G.zero_grad()
@@ -98,7 +98,7 @@ def pick_up_real_samples(batch_size, mnist_dim = 784):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=(0.5), std=(0.5))])
 
-    test_dataset = datasets.MNIST(root='data/MNIST/', train=False, transform=transform, download=True)
+    test_dataset = datasets.MNIST(root='data/MNIST/', train=False, transform=transform, download=False)
 
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset, 
                                               batch_size=batch_size, shuffle=True)
@@ -108,4 +108,51 @@ def pick_up_real_samples(batch_size, mnist_dim = 784):
         break
     
     return real_data[:,0,:,:]
+
+def GAN_opt_likelihood(samples, D):
+    """For a sample X, compute and return the likelihood ration r_opt
+    and the sup(r_opt) denotate as M"""
+    score = D(samples) #return T_opt for each x in X
+    r_opt = torch.exp(score-1) # Gradient of the conjugate of KL divergenec function
+    M = torch.max(r_opt)
+    return r_opt, M
+    
+def optimal_a_function(ck, M, r_opt):
+    optimal_a = r_opt*(ck/M)
+    optimal_a = torch.minimum(optimal_a, torch.full_like(optimal_a, 1))
+    return optimal_a 
+
+def Loss_ck(ck, M, r_opt, N, K) :
+    optimal_a = optimal_a_function(ck, M, r_opt)
+    ck_loss = torch.sum(optimal_a) - N/K # ou 1/K ???????????????????????????????????????????????????????????????????????????
+    return ck_loss, optimal_a   
+    
+def compute_ck(fake_samples, D, K, threshold=1e-4, warning=100):
+    count = 0
+    r_opt, M = GAN_opt_likelihood(fake_samples, D)
+    N = fake_samples.size(-1)
+    c_min, c_max = 1e-10, 1e10
+    ck = (c_min + c_max)/2
+    # Compute the loss L(ck)
+    ck_loss, aO = Loss_ck(ck, M, r_opt, N, K)
+    while torch.abs(ck_loss) >= threshold:
+        count +=1
+        if ck_loss>= threshold:
+            c_max = ck
+        elif ck_loss < -threshold:
+            c_min = ck
+        # Update ck
+        ck = (c_min + c_max)/2
+        #Update the Loss L(ck)
+        ck_loss, aO = Loss_ck(ck, M, r_opt, N, K)
+        # Provide infinit loop
+        if count>warning:
+            break
         
+    return ck, r_opt, M, aO
+
+def loss_G_OBRS(r_opt, aO, K):
+    #print(f'ck : {ck}\n\ M : {M}\n\ r_opt : {r_opt}\n\ K : {K}')
+    KaO = K*aO
+    divergence_f = r_opt*torch.log(r_opt/KaO)
+    return torch.mean(divergence_f).cuda()
