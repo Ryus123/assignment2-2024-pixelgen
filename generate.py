@@ -2,9 +2,9 @@ import torch
 import torchvision
 import os
 import argparse
-from utils_MHGAN import pick_up_real_samples, mh_samples, load_model_G, load_model_D, load_model_C
-from torchvision import datasets, transforms
-import time
+# from utils_MHGAN import pick_up_real_samples, mh_samples, load_model_G, load_model_D, load_model_C
+# from torchvision import datasets, transforms
+# import time
 
 
 from model import Generator, Discriminator, Calibrator_linear

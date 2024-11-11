@@ -101,17 +101,3 @@ if __name__ == '__main__':
             save_models(G, D, 'checkpoints')
 
     print('Training done')
-        
-# import matplotlib.pyplot as plt 
-
-# plt.plot(range(1, len(D_loss) + 1), D_loss, marker='o', color='b', linestyle='-', label='Loss basical discriminator')
-# plt.plot(range(1, len(G_loss) + 1), G_loss, marker='x', color='r', linestyle='--', label='Loss basical generator')
-# plt.xlabel('Epoch')
-# plt.ylabel('Loss')
-# plt.title('Basical GAN\'s with BCE losses')
-# plt.legend()  # Ajoute une légende pour différencier les deux pertes
-# plt.grid(True)
-
-# #plt.savefig("plot/Basic_config_loss_comparison.png", format='png', dpi=300)
-# plt.savefig("plot/hinge_loss_lr_2e-4_comparison.png", format='png', dpi=300)
-# plt.show()
