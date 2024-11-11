@@ -76,7 +76,7 @@ if __name__ == '__main__':
             x0 = torch.zeros((2, mnist_dim)).cuda()
             x_real = pick_up_real_samples(test_loader)
             x0[0,:] = x_real.view(-1, mnist_dim).reshape(1, mnist_dim).cuda()
-            new_sample = mh_samples(x0, model, Discr, Calib, K)
+            new_sample = mh_samples(x0, model, Discr, Calib, K, f"plot{n_samples}")
             torchvision.utils.save_image(new_sample, os.path.join('samples', f'{n_samples}.png'))
             n_samples += 1
     

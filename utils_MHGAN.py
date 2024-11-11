@@ -1,6 +1,7 @@
 import torch
 import os
 from torchvision import datasets, transforms
+# import matplotlib.pyplot as plt
 
 def D_train(x, G, D, D_optimizer, criterion):
     #=======================Train the discriminator=======================#
@@ -81,7 +82,7 @@ def pick_up_real_samples(data_loader):
     return real_data[:,0,:,:]
 
 
-def mh_samples(x0, G, Discr, Calib, K, mnist_dim=784):
+def mh_samples(x0, G, Discr, Calib, K, plot_name):
     """
     Return a new sample to save with the MH process.
     The output is of the shape (1, 28, 28)
@@ -96,6 +97,7 @@ def mh_samples(x0, G, Discr, Calib, K, mnist_dim=784):
     D_x0 =  Calib(Discr(x0))[0]
     
     while (change == False) and (max_ite <= 1):
+        # ratio_list = []
         # Generate K fake:
         z = torch.randn(K, 100).cuda()
         x_pot = G(z)   # shape: (K, 784)
@@ -106,12 +108,14 @@ def mh_samples(x0, G, Discr, Calib, K, mnist_dim=784):
 
         # MCMC process:
         for k in range(K):           
-            ratio = (D_x0**(-1) - 1) / (D_output[k]**(-1) - 1)
-
+            ratio = torch.minimum(1, (D_x0**(-1) - 1) / (D_output[k]**(-1) - 1))
+            # ratio_list.append(ratio.item())   # For the plot
             if U[k] <= ratio:
                 change = True
                 x0[0,:] = x_pot[k,:].clone()
                 D_x0 =  Calib(Discr(x0))[0]
+
+        # plot_acceptance_rate(ratio_list, plot_name)   # Function to plot
 
         # If change == True, we accepted a sample and we return it
         if change == True:
@@ -126,6 +130,19 @@ def mh_samples(x0, G, Discr, Calib, K, mnist_dim=784):
     # If we reach this part, then we have never accepted any samples.
     # We returned the first sample of the second chain.
     return x0[0,:].reshape(1, 28, 28)         
+
+# def plot_acceptance_rate(ratio_list, plot_name):
+#      """
+#      This function will plot and save the acceptance rate during the MCMC iterations.
+#      """
+#     k = [ i for i in range(len(ratio_list))]
+#     plt.plot(k, ratio_list)
+#     plt.grid()
+#     plt.xlabel("k")
+#     plt.ylabel("alpha")
+#     plt.title("Acceptance rate during the chain")
+#     plt.savefig(plot_name)
+
 
 def save_models(G, D, folder):
     torch.save(G.state_dict(), os.path.join(folder,'G.pth'))
