@@ -108,7 +108,8 @@ def mh_samples(x0, G, Discr, Calib, K, plot_name):
 
         # MCMC process:
         for k in range(K):           
-            ratio = torch.minimum(1, (D_x0**(-1) - 1) / (D_output[k]**(-1) - 1))
+            ratio = (D_x0**(-1) - 1) / (D_output[k]**(-1) - 1)
+            #ratio = torch.minimum(torch.tensor(1), (D_x0**(-1) - 1) / (D_output[k]**(-1) - 1))
             # ratio_list.append(ratio.item())   # For the plot
             if U[k] <= ratio:
                 change = True
