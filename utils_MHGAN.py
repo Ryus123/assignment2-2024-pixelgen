@@ -94,7 +94,8 @@ def mh_samples(x0, G, Discr, Calib, K, plot_name):
     """
     change = False
     max_ite = 0
-    D_x0 =  Calib(Discr(x0))[0]
+    # D_x0 =  Calib(Discr(x0))[0]
+    D_x0 = Discr(x0)[0]
     
     while (change == False) and (max_ite <= 1):
         # ratio_list = []
@@ -102,19 +103,21 @@ def mh_samples(x0, G, Discr, Calib, K, plot_name):
         z = torch.randn(K, 100).cuda()
         x_pot = G(z)   # shape: (K, 784)
         # Get the Discrimninator's and x0's probability:
-        D_output = Calib(Discr(x_pot))  # shape: (K)
+        # D_output = Calib(Discr(x_pot))  # shape: (K)
+        D_output = Discr(x_pot)
         # Get the K uniform variable between [0;1]
         U = torch.rand(K).cuda()
 
         # MCMC process:
         for k in range(K):           
             ratio = (D_x0**(-1) - 1) / (D_output[k]**(-1) - 1)
-            #ratio = torch.minimum(torch.tensor(1), (D_x0**(-1) - 1) / (D_output[k]**(-1) - 1))
+            # ratio = torch.minimum(torch.tensor(1), (D_x0**(-1) - 1) / (D_output[k]**(-1) - 1))
             # ratio_list.append(ratio.item())   # For the plot
             if U[k] <= ratio:
                 change = True
                 x0[0,:] = x_pot[k,:].clone()
-                D_x0 =  Calib(Discr(x0))[0]
+                # D_x0 =  Calib(Discr(x0))[0]
+                D_x0 = Discr(x0)[0]
 
         # plot_acceptance_rate(ratio_list, plot_name)   # Function to plot
 
@@ -125,7 +128,8 @@ def mh_samples(x0, G, Discr, Calib, K, plot_name):
         # Else we start a new chain with a fake image as the starting point
         else:
             x0 = G(torch.randn(2, 100).cuda())
-            D_x0 = Calib(Discr(x0))[0]
+            # D_x0 = Calib(Discr(x0))[0]
+            D_x0 = Discr(x0)[0]
             max_ite += 1
 
     # If we reach this part, then we have never accepted any samples.

@@ -38,17 +38,16 @@ if __name__ == '__main__':
     train_dataset = datasets.MNIST(root='data/MNIST/', train=True, transform=transform, download=True)
     # len(train_dataset) = 60000    
     # 10% of the training dataset is for the calibration
-    # calibration_dataset = torch.utils.data.Subset(train_dataset,np.arange(54000, 60000, 1, dtype=int))
-    # train_dataset = torch.utils.data.Subset(train_dataset,np.arange(0, 54000, 1, dtype=int))
+    calibration_dataset = torch.utils.data.Subset(train_dataset,np.arange(54000, 60000, 1, dtype=int))
     test_dataset = datasets.MNIST(root='data/MNIST/', train=False, transform=transform, download=False)
 
 
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset, 
                                                batch_size=args.batch_size, shuffle=True)
-    # calibration_loader = torch.utils.data.DataLoader(dataset=calibration_dataset, 
-    #                                            batch_size=args.batch_size, shuffle=True)
+    calibration_loader = torch.utils.data.DataLoader(dataset=calibration_dataset, 
+                                               batch_size=args.batch_size, shuffle=True)
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset, 
-                                              batch_size=args.batch_size, shuffle=True)
+                                               batch_size=args.batch_size, shuffle=True)
     print('Dataset Loaded.')
 
 
@@ -63,7 +62,6 @@ if __name__ == '__main__':
     D_tilde = torch.nn.DataParallel(D_tilde).cuda()
     C = torch.nn.DataParallel(Calibrator_linear()).cuda()
 
-    # model = DataParallel(model).cuda()
     print('Model loaded.')
 
     # Optimizer 
@@ -90,7 +88,7 @@ if __name__ == '__main__':
 
     # We then train the Calibrator
     for epoch in trange(1, n_epoch+1, leave=True):
-        for batch_idx, (x,_) in enumerate(test_loader):
+        for batch_idx, (x,_) in enumerate(calibration_loader):
             x = x.view(-1, mnist_dim)
             Calibrator_train(x, C, G, D_tilde, C_optimizer, criterion)
         

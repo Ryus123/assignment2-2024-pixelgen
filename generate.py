@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", type=int, default=2048,
                       help="The batch size to use for training.")
     #Classic : generate from G; MH : Generate with Metropolis Hasting rejection sampling
-    parser.add_argument("--gen_method", type=str, default='classic',
+    parser.add_argument("--gen_method", type=str, default='MH',
                       help="Generation method with/out rejection sampling (classic; MH)")
     args = parser.parse_args()
 
